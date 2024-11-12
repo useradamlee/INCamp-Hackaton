@@ -88,16 +88,14 @@ struct GameView: View {
     // Game Logic Functions
     private func canMakeMove(gameMode: GameMode, currentPlayer: Player) -> Bool {
         if gameMode == .pvp {
-            return true // Player vs Player: anyone can make a move
+            return true
         } else {
-            // Player vs Computer: allow human (Player 1) to make a move, then make the computer move
+            // Player vs Computer mode
             if currentPlayer == .first {
-                return true
-            } else if currentPlayer == .second && !gameOver {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    makeComputerMove()
-                }
-                return false // Don't allow the computer to wait for a press, let it move automatically
+                return true // Human player's turn
+            } else if currentPlayer == .computer && !gameOver {
+                makeComputerMove()
+                return false
             }
         }
         return false
@@ -107,6 +105,13 @@ struct GameView: View {
     private func setupGame() {
         resetBoard()
         setupPowerSquares()
+        
+        // Set initial player based on game mode
+        if gameMode == .computer {
+            currentPlayer = .human  // Start with human player in PvC mode
+        } else {
+            currentPlayer = .first  // Start with Player 1 in PvP mode
+        }
     }
     
     private func makeMove(at position: Position) {
@@ -118,15 +123,12 @@ struct GameView: View {
         // Apply the power-up if available
         if let powerUp = powerSquares[position] {
             if powerUp == .wildCard {
-                // Activate Wild Card: Let the player choose an extra square
                 alertMessage = "Wild Card: Select another square to place an extra mark!"
                 showAlert = true
-                // Store the position of the first mark
                 wildCardFirstMarkPosition = position
             } else {
-                // For other power-ups (steal, reverse)
                 applyPowerUp(powerUp, at: position)
-                powerSquares.removeValue(forKey: position) // Remove the power-up from the board after it is used
+                powerSquares.removeValue(forKey: position)
             }
         }
 
@@ -140,22 +142,22 @@ struct GameView: View {
             if gameMode == .pvp {
                 currentPlayer = (currentPlayer == .first) ? .second : .first
             } else {
-                currentPlayer = (currentPlayer == .first) ? .second : .first
-                if currentPlayer == .second {
+                // In PvC mode
+                if currentPlayer == .human {
+                    currentPlayer = .computer
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        makeComputerMove() // Let the computer make its move immediately
+                        makeComputerMove()
                     }
+                } else {
+                    currentPlayer = .human
                 }
             }
         }
     }
-
-
-
     
     private func makeComputerMove() {
         guard currentPlayer == .computer && !gameOver else { return }
-        
+
         // Try to find winning move
         if let winningMove = findBestMove(for: .computer) {
             makeMove(at: winningMove)
@@ -284,15 +286,14 @@ struct GameView: View {
         gameOver = false
         alertMessage = ""
         
-        // Reset the board and current player based on game mode
+        // Reset the board and set initial player based on game mode
         resetBoard()
-        currentPlayer = .first // Always start with the first player
         
-        // If the game mode is player vs. computer, set the current player to start with Player 1
+        // Set initial player based on game mode
         if gameMode == .computer {
-            currentPlayer = .first
+            currentPlayer = .human  // Start with human player in PvC mode
         } else {
-            currentPlayer = .first
+            currentPlayer = .first  // Start with Player 1 in PvP mode
         }
     }
     
