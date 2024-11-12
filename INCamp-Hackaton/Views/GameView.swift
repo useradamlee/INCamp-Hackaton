@@ -90,9 +90,8 @@ struct GameView: View {
         if gameMode == .pvp {
             return true
         } else {
-            // Player vs Computer mode
-            if currentPlayer == .first {
-                return true // Human player's turn
+            if currentPlayer == .human {
+                return true
             } else if currentPlayer == .computer && !gameOver {
                 makeComputerMove()
                 return false
@@ -106,11 +105,10 @@ struct GameView: View {
         resetBoard()
         setupPowerSquares()
         
-        // Set initial player based on game mode
         if gameMode == .computer {
-            currentPlayer = .human  // Start with human player in PvC mode
+            currentPlayer = .human
         } else {
-            currentPlayer = .first  // Start with Player 1 in PvP mode
+            currentPlayer = .first
         }
     }
     
