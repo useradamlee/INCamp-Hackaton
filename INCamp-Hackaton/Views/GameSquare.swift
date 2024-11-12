@@ -16,14 +16,14 @@ struct GameSquare: View {
         Button(action: action) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(hex: "#581845").opacity(0.2))
+                    .fill(Color(hex: "#cc9c0e").opacity(0.2))
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(isPowerSquare ? Color.yellow : Color.clear, lineWidth: 2)
                     )
                 Text(symbol)
                     .font(.system(size: 40, weight: .bold))
-                    .foregroundColor(Color(hex: "#581845"))
+                    .foregroundColor(Color(hex: "#664e07"))
             }
         }
         .frame(width: 80, height: 80)

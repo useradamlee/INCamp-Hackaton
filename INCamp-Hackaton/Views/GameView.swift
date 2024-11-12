@@ -22,6 +22,8 @@ struct GameView: View {
     @State private var alertMessage: String = ""
     @State private var lastOpponentMove: Position? = nil
     @State private var roundStarted: Bool = false // New flag to track the start of each round
+    @State private var isWildCardActive: Bool = false
+    @State private var wildCardPlayer: Player? = nil
     
     // Animation states
     @State private var scaleEffect: CGFloat = 1.0
@@ -96,7 +98,12 @@ struct GameView: View {
 
     
     // Game Logic Functions
+    // Update the canMakeMove function
     private func canMakeMove(gameMode: GameMode, currentPlayer: Player) -> Bool {
+        if isWildCardActive {
+            return true  // Allow the Wild Card move regardless of whose turn it is
+        }
+        
         if gameMode == .pvp {
             return true
         } else {
@@ -107,13 +114,41 @@ struct GameView: View {
     
     private func setupGame() {
         resetBoard()
+        // Move setupPowerSquares() after board reset to ensure proper initialization
         setupPowerSquares()
         
-        if gameMode == .computer {
-            currentPlayer = .human
-        } else {
+        if gameMode == .pvp {
             currentPlayer = .first
+            // Add this line to ensure power-ups are ready for the first turn
+            powerSquares = setupInitialPowerSquares()
+        } else {
+            currentPlayer = .human
         }
+    }
+
+    // Add this new function to properly initialize power squares
+    private func setupInitialPowerSquares() -> [Position: PowerUp] {
+        var squares = [Position: PowerUp]()
+        let numberOfPowerUps = Int.random(in: 1...2)
+        
+        // Create array of all possible positions
+        var availablePositions = [Position]()
+        for row in 0..<3 {
+            for col in 0..<3 {
+                availablePositions.append(Position(row: row, col: col))
+            }
+        }
+        
+        // Randomly assign power-ups
+        for _ in 0..<numberOfPowerUps {
+            if let randomPosition = availablePositions.randomElement(),
+               let randomIndex = availablePositions.firstIndex(of: randomPosition) {
+                squares[randomPosition] = PowerUp.allCases.randomElement()
+                availablePositions.remove(at: randomIndex)
+            }
+        }
+        
+        return squares
     }
     
     private func makeMoveWithAnimation(at position: Position) {
@@ -123,23 +158,25 @@ struct GameView: View {
     }
 
     private func makeMove(at position: Position) {
+        // Check if the square is already occupied or if game is over
         guard board[position.row][position.col] == .none && !gameOver else { return }
         
-        // Ensure it's the player's turn in computer mode
-        if gameMode == .computer && currentPlayer != .human {
-            return
+        // Make the move
+        withAnimation(.easeInOut(duration: 0.3)) {
+            board[position.row][position.col] = currentPlayer
         }
         
-        let movingPlayer = currentPlayer
-        board[position.row][position.col] = movingPlayer
-        
+        // Check if the move was on a power-up square
         if let powerUp = powerSquares[position] {
             applyPowerUp(powerUp, at: position)
             powerSquares.removeValue(forKey: position)
+            // Don't switch turns here - it will be handled in applyPowerUp when the power-up effect is complete
+            return
         }
         
-        if checkWin(for: movingPlayer) {
-            handleWin(for: movingPlayer)
+        // If no power-up, check win condition and switch turns normally
+        if checkWin(for: currentPlayer) {
+            handleWin(for: currentPlayer)
         } else if isBoardFull() {
             handleDraw()
         } else {
@@ -261,32 +298,68 @@ struct GameView: View {
     private func applyPowerUp(_ powerUp: PowerUp, at position: Position) {
         switch powerUp {
         case .wildCard:
+            isWildCardActive = true
+            wildCardPlayer = currentPlayer
             alertMessage = "Wild Card: Place an extra mark!"
             showAlert = true
-            wildCardFirstMarkPosition = position
-            withAnimation(.spring()) {
-                        wildCardFirstMarkPosition = position
-                    }
             
         case .steal:
-            // Capture an opponent’s mark
+            var stoleAMark = false
             for row in 0..<3 {
                 for col in 0..<3 {
-                    if board[row][col] == (currentPlayer == .human ? .computer : .human) {
-                        board[row][col] = currentPlayer
+                    // Fix the opponent determination based on game mode
+                    let opponent: Player
+                    if gameMode == .computer {
+                        opponent = currentPlayer == .human ? .computer : .human
+                    } else {
+                        opponent = currentPlayer == .first ? .second : .first
+                    }
+                    
+                    if board[row][col] == opponent {
                         withAnimation(.easeInOut(duration: 0.5)) {
-                                                board[row][col] = currentPlayer
-                                            }
-                        return
+                            board[row][col] = currentPlayer
+                        }
+                        stoleAMark = true
+                        break
                     }
                 }
+                if stoleAMark { break }
+            }
+            if checkWin(for: currentPlayer) {
+                handleWin(for: currentPlayer)
+            } else {
+                switchTurns()
             }
             
         case .reverse:
             board[position.row][position.col] = .none
-            alertMessage = "Reverse: Your opponent's last move was undone!"
+            alertMessage = "Reverse: Your last move was undone!"
             showAlert = true
+            switchTurns()
         }
+    }
+    
+    // Add this helper function to complete the Wild Card move
+    private func completeWildCardMove(at position: Position) {
+        guard isWildCardActive && board[position.row][position.col] == .none else { return }
+        
+        withAnimation(.easeInOut(duration: 0.3)) {
+            board[position.row][position.col] = wildCardPlayer ?? currentPlayer
+        }
+        
+        isWildCardActive = false
+        
+        // Check win condition after the second mark is placed
+        if checkWin(for: wildCardPlayer ?? currentPlayer) {
+            handleWin(for: wildCardPlayer ?? currentPlayer)
+        } else if isBoardFull() {
+            handleDraw()
+        } else {
+            // Only switch turns after the Wild Card effect is complete
+            switchTurns()
+        }
+        
+        wildCardPlayer = nil
     }
     
     // Inside handleWin(for: Player)
@@ -336,6 +409,8 @@ struct GameView: View {
     private func resetBoard() {
         board = Array(repeating: Array(repeating: .none, count: 3), count: 3)
         setupPowerSquares()
+        isWildCardActive = false
+        wildCardPlayer = nil
         
         if gameMode == .computer {
             currentPlayer = .human
@@ -343,7 +418,6 @@ struct GameView: View {
             currentPlayer = .first
         }
         
-        wildCardFirstMarkPosition = nil
         gameOver = false
     }
     
