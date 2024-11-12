@@ -114,40 +114,32 @@ struct GameView: View {
     
     private func makeMove(at position: Position) {
         guard board[position.row][position.col] == .none && !gameOver else { return }
-        
-        // Make the move for the current player
+
+        print("Making move at \(position) for \(currentPlayer)")
         board[position.row][position.col] = currentPlayer
-        
-        // Apply the power-up if available
+
         if let powerUp = powerSquares[position] {
-            if powerUp == .wildCard {
-                alertMessage = "Wild Card: Select another square to place an extra mark!"
-                showAlert = true
-                wildCardFirstMarkPosition = position
-            } else {
-                applyPowerUp(powerUp, at: position)
-                powerSquares.removeValue(forKey: position)
-            }
+            applyPowerUp(powerUp, at: position)
+            powerSquares.removeValue(forKey: position)
         }
 
-        // Check for win or draw
         if checkWin(for: currentPlayer) {
             handleWin(for: currentPlayer)
         } else if isBoardFull() {
             handleDraw()
         } else {
-            // Switch turns based on game mode
-            if gameMode == .pvp {
-                currentPlayer = (currentPlayer == .first) ? .second : .first
-            } else {
-                // In PvC mode
-                if currentPlayer == .human {
-                    currentPlayer = .computer
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        makeComputerMove()
-                    }
-                } else {
-                    currentPlayer = .human
+            switchTurns()
+        }
+    }
+    
+    private func switchTurns() {
+        if gameMode == .pvp {
+            currentPlayer = (currentPlayer == .first) ? .second : .first
+        } else {
+            currentPlayer = (currentPlayer == .human) ? .computer : .human
+            if currentPlayer == .computer {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    makeComputerMove()
                 }
             }
         }
@@ -234,16 +226,15 @@ struct GameView: View {
     // Inside handleWin(for: Player)
     private func handleWin(for player: Player) {
         if player == .first {
-            secondPlayerHealth -= 1
-            alertMessage = secondPlayerHealth > 0 ? "Player 1 won this round!" : "Player 1 won the game!"
+            secondPlayerHealth = max(secondPlayerHealth - 1, 0)
         } else {
-            firstPlayerHealth -= 1
-            alertMessage = firstPlayerHealth > 0 ? "Player 2 won this round!" : "Player 2 won the game!"
+            firstPlayerHealth = max(firstPlayerHealth - 1, 0)
         }
         
+        print("First Player Health: \(firstPlayerHealth), Second Player Health: \(secondPlayerHealth)")
         gameOver = firstPlayerHealth == 0 || secondPlayerHealth == 0
         showAlert = true
-        
+
         if !gameOver {
             resetBoard()
         }
