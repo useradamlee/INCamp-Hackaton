@@ -9,6 +9,7 @@ import SwiftUI
 
 struct GameView: View {
     let gameMode: GameMode
+    let difficulty: Difficulty // Add this line
     @Environment(\.presentationMode) var presentationMode
     
     @State private var board: [[Player]] = Array(repeating: Array(repeating: .none, count: 3), count: 3)
@@ -232,33 +233,31 @@ struct GameView: View {
             }
         }
         
-        // Make the move
-        if let winningMove = findBestMove(for: .computer) {
-            board[winningMove.row][winningMove.col] = .computer
-            
-            if checkWin(for: .computer) {
-                handleWin(for: .computer)
-            } else {
-                switchTurns()
+        // Modify this part to adjust computer move difficulty based on the difficulty setting
+        if difficulty == .easy {
+            if let randomPosition = availablePositions.randomElement() {
+                board[randomPosition.row][randomPosition.col] = .computer
             }
-        } else if let blockingMove = findBestMove(for: .human) {
-            board[blockingMove.row][blockingMove.col] = .computer
-            
-            if checkWin(for: .computer) {
-                handleWin(for: .computer)
-            } else {
-                switchTurns()
+        } else if difficulty == .medium {
+            if let winningMove = findBestMove(for: .computer) {
+                board[winningMove.row][winningMove.col] = .computer
+            } else if let blockingMove = findBestMove(for: .human) {
+                board[blockingMove.row][blockingMove.col] = .computer
+            } else if let randomPosition = availablePositions.randomElement() {
+                board[randomPosition.row][randomPosition.col] = .computer
             }
-        } else if let randomPosition = availablePositions.randomElement() {
-            board[randomPosition.row][randomPosition.col] = .computer
-            
-            if checkWin(for: .computer) {
-                handleWin(for: .computer)
-            } else if isBoardFull() {
-                handleDraw()
-            } else {
-                switchTurns()
+        } else if difficulty == .hard {
+            if let bestMove = findBestMove(for: .computer) {
+                board[bestMove.row][bestMove.col] = .computer
             }
+        }
+        
+        if checkWin(for: .computer) {
+            handleWin(for: .computer)
+        } else if isBoardFull() {
+            handleDraw()
+        } else {
+            switchTurns()
         }
     }
     
@@ -444,5 +443,5 @@ struct GameView: View {
 }
 
 #Preview {
-    GameView(gameMode: .pvp)
+    GameView(gameMode: .pvp, difficulty: .medium)
 }
