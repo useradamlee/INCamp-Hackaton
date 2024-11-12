@@ -21,6 +21,13 @@ struct GameView: View {
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     @State private var lastOpponentMove: Position? = nil
+    @State private var roundStarted: Bool = false // New flag to track the start of each round
+    
+    // Animation states
+    @State private var scaleEffect: CGFloat = 1.0
+    @State private var turnIndicatorOpacity: Double = 1.0
+    @State private var shakePowerUp: Bool = false
+    @State private var winLineHighlighted: [Position] = []
 
     
     let primaryColor = Color(hex: "#FFC312")
@@ -32,6 +39,8 @@ struct GameView: View {
             
             // Health Display
             HealthDisplayView(gameMode: gameMode, firstPlayerHealth: firstPlayerHealth, secondPlayerHealth: secondPlayerHealth, primaryColor: primaryColor)
+                .animation(.easeInOut, value: firstPlayerHealth)
+                .animation(.easeInOut, value: secondPlayerHealth)
             
             // Current Player Indicator
             CurrentPlayerIndicatorView(currentPlayer: currentPlayer)
@@ -60,6 +69,7 @@ struct GameView: View {
             }
             .padding()
             .shadow(radius: 3)
+            .animation(.easeInOut, value: gameOver) // Fade-in for reset button when game is over
             
             Spacer()
         }
@@ -74,13 +84,10 @@ struct GameView: View {
             )
         }
         .onAppear(perform: setupGame)
-        .onChange(of: currentPlayer) { oldValue, newValue in
-            // Only trigger computer move if it's explicitly switched to computer's turn
-            if gameMode == .computer && newValue == .computer && !gameOver {
+        .onChange(of: currentPlayer) { _, newPlayer in
+            if gameMode == .computer && newPlayer == .computer && !gameOver {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    if self.currentPlayer == .computer && !self.gameOver {
-                        self.makeComputerMove()
-                    }
+                    makeComputerMove()
                 }
             }
         }
@@ -93,14 +100,8 @@ struct GameView: View {
         if gameMode == .pvp {
             return true
         } else {
-            if currentPlayer == .human {
-                return true
-            } else if currentPlayer == .computer && !gameOver {
-                makeComputerMove()
-                return false
-            }
+            return currentPlayer == .human
         }
-        return false
     }
 
     
@@ -115,88 +116,111 @@ struct GameView: View {
         }
     }
     
-    private func makeMove(at position: Position) {
-        // Prevent moves during processing
-        guard board[position.row][position.col] == .none && !gameOver else { return }
-        
-        // State tracking
-        let currentGameMode = gameMode
-        let movingPlayer = currentPlayer
-        
-        // Make the move
-        board[position.row][position.col] = movingPlayer
-        
-        // Handle power-ups
-        if let powerUp = powerSquares[position] {
-            if powerUp == .wildCard {
-                wildCardFirstMarkPosition = position
-                alertMessage = "Wild Card: Select another square to place an extra mark!"
-                showAlert = true
-            } else {
-                applyPowerUp(powerUp, at: position)
-            }
-            powerSquares.removeValue(forKey: position)
-        }
-        
-        // Check game state
-        if checkWin(for: movingPlayer) {
-            DispatchQueue.main.async {
-                self.handleWin(for: movingPlayer)
-            }
-        } else if isBoardFull() {
-            DispatchQueue.main.async {
-                self.handleDraw()
-            }
-        } else {
-            // Switch turns with proper state management
-            DispatchQueue.main.async {
-                if currentGameMode == .pvp {
-                    self.currentPlayer = (movingPlayer == .first) ? .second : .first
-                } else {
-                    if movingPlayer == .human {
-                        self.currentPlayer = .computer
-                        // Ensure computer move happens after state update
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            self.makeComputerMove()
-                        }
-                    } else {
-                        self.currentPlayer = .human
-                    }
-                }
-            }
+    private func makeMoveWithAnimation(at position: Position) {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            makeMove(at: position)
         }
     }
 
+    private func makeMove(at position: Position) {
+        guard board[position.row][position.col] == .none && !gameOver else { return }
+        
+        // Ensure it's the player's turn in computer mode
+        if gameMode == .computer && currentPlayer != .human {
+            return
+        }
+        
+        let movingPlayer = currentPlayer
+        board[position.row][position.col] = movingPlayer
+        
+        if let powerUp = powerSquares[position] {
+            applyPowerUp(powerUp, at: position)
+            powerSquares.removeValue(forKey: position)
+        }
+        
+        if checkWin(for: movingPlayer) {
+            handleWin(for: movingPlayer)
+        } else if isBoardFull() {
+            handleDraw()
+        } else {
+            switchTurns()
+        }
+    }
+    
+    private func isBoardFull() -> Bool {
+        return !board.contains { $0.contains(.none) }
+    }
+    
+    private func animateWinLine(for player: Player) {
+        withAnimation(.linear(duration: 1.0)) {
+            // Trigger any animations for highlighting the win
+        }
+    }
+    
+    
+    private func shakePowerUpEffect() {
+        withAnimation(Animation.default.repeatCount(3, autoreverses: true)) {
+            shakePowerUp = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            shakePowerUp = false
+        }
+    }
     
     private func switchTurns() {
         if gameMode == .pvp {
             currentPlayer = (currentPlayer == .first) ? .second : .first
         } else {
-            currentPlayer = (currentPlayer == .human) ? .computer : .human
-            if currentPlayer == .computer {
+            if currentPlayer == .human {
+                currentPlayer = .computer
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     makeComputerMove()
                 }
+            } else {
+                currentPlayer = .human
             }
         }
     }
     
     private func makeComputerMove() {
-        // Prevent multiple computer moves
         guard currentPlayer == .computer && !gameOver else { return }
         
-        // Add delay to prevent rapid moves
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            if let winningMove = self.findBestMove(for: .computer) {
-                self.makeMove(at: winningMove)
-            } else if let blockingMove = self.findBestMove(for: .human) {
-                self.makeMove(at: blockingMove)
-            } else {
-                // Random move
-                let availablePositions = self.getAvailablePositions()
-                if let randomPosition = availablePositions.randomElement() {
-                    self.makeMove(at: randomPosition)
+        // Get available positions
+        var availablePositions = [(row: Int, col: Int)]()
+        for row in 0..<3 {
+            for col in 0..<3 {
+                if board[row][col] == .none {
+                    availablePositions.append((row, col))
                 }
+            }
+        }
+        
+        // Make the move
+        if let winningMove = findBestMove(for: .computer) {
+            board[winningMove.row][winningMove.col] = .computer
+            
+            if checkWin(for: .computer) {
+                handleWin(for: .computer)
+            } else {
+                switchTurns()
+            }
+        } else if let blockingMove = findBestMove(for: .human) {
+            board[blockingMove.row][blockingMove.col] = .computer
+            
+            if checkWin(for: .computer) {
+                handleWin(for: .computer)
+            } else {
+                switchTurns()
+            }
+        } else if let randomPosition = availablePositions.randomElement() {
+            board[randomPosition.row][randomPosition.col] = .computer
+            
+            if checkWin(for: .computer) {
+                handleWin(for: .computer)
+            } else if isBoardFull() {
+                handleDraw()
+            } else {
+                switchTurns()
             }
         }
     }
@@ -233,27 +257,32 @@ struct GameView: View {
         }
         return nil
     }
-    
+
     private func applyPowerUp(_ powerUp: PowerUp, at position: Position) {
         switch powerUp {
         case .wildCard:
-            
-            // Place an extra mark anywhere
             alertMessage = "Wild Card: Place an extra mark!"
             showAlert = true
+            wildCardFirstMarkPosition = position
+            withAnimation(.spring()) {
+                        wildCardFirstMarkPosition = position
+                    }
             
         case .steal:
-            // Steal opponent's mark
+            // Capture an opponent’s mark
             for row in 0..<3 {
                 for col in 0..<3 {
                     if board[row][col] == (currentPlayer == .human ? .computer : .human) {
                         board[row][col] = currentPlayer
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                                                board[row][col] = currentPlayer
+                                            }
                         return
                     }
                 }
             }
+            
         case .reverse:
-            // Reverse the last move
             board[position.row][position.col] = .none
             alertMessage = "Reverse: Your opponent's last move was undone!"
             showAlert = true
@@ -304,45 +333,26 @@ struct GameView: View {
         return false
     }
     
-    private func isBoardFull() -> Bool {
-        return !board.contains { $0.contains(.none) }
+    private func resetBoard() {
+        board = Array(repeating: Array(repeating: .none, count: 3), count: 3)
+        setupPowerSquares()
+        
+        if gameMode == .computer {
+            currentPlayer = .human
+        } else {
+            currentPlayer = .first
+        }
+        
+        wildCardFirstMarkPosition = nil
+        gameOver = false
     }
     
     private func resetGame() {
-        // Reset health for both players
         firstPlayerHealth = 3
         secondPlayerHealth = 3
         gameOver = false
         alertMessage = ""
-        
-        // Reset the board and set initial player based on game mode
         resetBoard()
-        
-        // Set initial player based on game mode
-        if gameMode == .computer {
-            currentPlayer = .human  // Start with human player in PvC mode
-        } else {
-            currentPlayer = .first  // Start with Player 1 in PvP mode
-        }
-    }
-    
-    private func resetBoard() {
-        // Reset the board
-        board = Array(repeating: Array(repeating: .none, count: 3), count: 3)
-        
-        // Reset power squares
-        setupPowerSquares()
-        
-        // Important: Reset to the correct starting player based on game mode
-        if gameMode == .computer {
-            currentPlayer = .human  // Always start with human in PvC mode
-        } else {
-            currentPlayer = .first  // Start with first player in PvP mode
-        }
-        
-        // Reset any other game state
-        wildCardFirstMarkPosition = nil
-        gameOver = false
     }
 
     
