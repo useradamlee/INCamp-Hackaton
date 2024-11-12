@@ -30,7 +30,7 @@ struct DifficultySelectionView: View {
                         .font(.headline)
                         .foregroundColor(.white)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color(hex: "#FFC312"))
                         .cornerRadius(10)
                 }
                 .padding()
@@ -38,6 +38,14 @@ struct DifficultySelectionView: View {
                 Spacer()
             }
             .navigationTitle("Difficulty Selection")
+            .navigationBarItems(leading: Button(action: {
+                // Navigation back action
+            }) {
+                Image(systemName: "chevron.left")
+                    .foregroundColor(Color(hex: "#FFC312"))
+                Text("Back")
+                    .foregroundColor(Color(hex: "#FFC312"))
+            })
         }
     }
 }

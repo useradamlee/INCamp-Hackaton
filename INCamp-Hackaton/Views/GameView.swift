@@ -38,7 +38,7 @@ struct GameView: View {
     var body: some View {
         VStack {
             // Custom Back Button
-            BackButtonView(primaryColor: primaryColor)
+//            BackButtonView(primaryColor: primaryColor)
             
             // Health Display
             HealthDisplayView(gameMode: gameMode, firstPlayerHealth: firstPlayerHealth, secondPlayerHealth: secondPlayerHealth, primaryColor: primaryColor)

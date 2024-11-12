@@ -27,7 +27,7 @@ struct HomeView: View {
                         
                         VStack(spacing: 20) {
                             // Player vs Player Mode
-                            NavigationLink(destination: GameView(gameMode: .pvp)) {
+                            NavigationLink(destination: GameView(gameMode: .pvp, difficulty: .easy)) {
                                 GameModeButton(title: "Player vs Player", imageName: "person.2.fill", color: Color.black.opacity(0.8))
                             }
                             

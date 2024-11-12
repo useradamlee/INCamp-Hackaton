@@ -38,6 +38,14 @@ struct GameHistoryView: View {
                 .listStyle(PlainListStyle())
             }
             .navigationTitle("Game History")
+            .navigationBarItems(leading: Button(action: {
+                // Navigation back action
+            }) {
+                Image(systemName: "chevron.left")
+                    .foregroundColor(Color(hex: "#FFC312"))
+                Text("Back")
+                    .foregroundColor(Color(hex: "#FFC312"))
+            })
         }
     }
 }
