@@ -11,40 +11,52 @@ struct HomeView: View {
     let primaryColor = Color(hex: "#FFC312")
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                Color(hex: "#FFC312").edgesIgnoringSafeArea(.all)
-                
-                VStack(spacing: 40) {
-                    Text("Tickle That Toe")
-                        .font(.largeTitle)
-                        .bold()
-                        .foregroundColor(.white)
-                        .padding()
-                        .background(Color.black.opacity(0.7))
-                        .cornerRadius(15)
+        TabView {
+            NavigationView {
+                ZStack {
+                    Color(hex: "#FFC312").edgesIgnoringSafeArea(.all)
                     
-                    VStack(spacing: 20) {
-                        // Player vs Player Mode
-                        NavigationLink(destination: GameView(gameMode: .pvp)) {
-                            GameModeButton(title: "Player vs Player", imageName: "person.2.fill", color: Color.black.opacity(0.8))
-                        }
+                    VStack(spacing: 40) {
+                        Text("Tickle That Toe")
+                            .font(.largeTitle)
+                            .bold()
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.black.opacity(0.7))
+                            .cornerRadius(15)
                         
-                        // Player vs Computer Mode
-                        NavigationLink(destination: GameView(gameMode: .computer)) {
-                            GameModeButton(title: "Player vs Computer", imageName: "desktopcomputer", color: Color.black.opacity(0.8))
+                        VStack(spacing: 20) {
+                            // Player vs Player Mode
+                            NavigationLink(destination: GameView(gameMode: .pvp)) {
+                                GameModeButton(title: "Player vs Player", imageName: "person.2.fill", color: Color.black.opacity(0.8))
+                            }
+                            
+                            // Player vs Computer Mode
+                            NavigationLink(destination: GameView(gameMode: .computer)) {
+                                GameModeButton(title: "Player vs Computer", imageName: "desktopcomputer", color: Color.black.opacity(0.8))
+                            }
                         }
+                        .padding()
+                        .background(Color.white.opacity(0.2))
+                        .cornerRadius(15)
+                        .shadow(radius: 10)
+                        
+                        Spacer()
                     }
                     .padding()
-                    .background(Color.white.opacity(0.2))
-                    .cornerRadius(15)
-                    .shadow(radius: 10)
-                    
-                    Spacer()
                 }
-                .padding()
+                .navigationBarHidden(true) // Hide the navigation bar for cleaner UI
             }
-            .navigationBarHidden(true) // Hide the navigation bar for cleaner UI
+            .tabItem {
+                Image(systemName: "house.fill")
+                Text("Home")
+            }
+            
+            GameHistoryView()
+                .tabItem {
+                    Image(systemName: "clock.fill")
+                    Text("Game History")
+                }
         }
     }
 }

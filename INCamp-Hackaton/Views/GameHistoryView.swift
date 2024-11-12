@@ -8,9 +8,44 @@
 import SwiftUI
 
 struct GameHistoryView: View {
+    var gameHistories: [GameHistory] = [
+        GameHistory(date: "2024-11-10", summary: "Player A vs Player B"),
+        GameHistory(date: "2024-11-11", summary: "Player C vs Player D"),
+        // Add more game histories here
+    ]
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        NavigationView {
+            ZStack {
+                Color(hex: "#FFC312").edgesIgnoringSafeArea(.all)
+                List(gameHistories) { gameHistory in
+                    NavigationLink(destination: DetailedGameHistoryView(gameHistory: gameHistory)) {
+                        VStack(alignment: .leading) {
+                            Text(gameHistory.date)
+                                .font(.headline)
+                                .foregroundColor(.black)
+                            Text(gameHistory.summary)
+                                .font(.subheadline)
+                                .foregroundColor(.black)
+                        }
+                        .padding()
+                        .background(Color.white.opacity(0.8))
+                        .cornerRadius(10)
+                        .shadow(radius: 5)
+                    }
+                    .listRowBackground(Color.clear) // Make sure list row background is transparent
+                }
+                .listStyle(PlainListStyle())
+            }
+            .navigationTitle("Game History")
+        }
     }
+}
+
+struct GameHistory: Identifiable {
+    let id = UUID()
+    let date: String
+    let summary: String
 }
 
 #Preview {
