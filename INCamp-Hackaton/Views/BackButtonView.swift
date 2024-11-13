@@ -9,9 +9,8 @@ import SwiftUI
 
 struct BackButtonView: View {
     let primaryColor: Color
-    @Environment(\.presentationMode) var presentationMode
-    
     @Binding var showingAlert: Bool
+    @Binding var navigateToHome: Bool
     
     var body: some View {
         HStack {
@@ -34,5 +33,5 @@ struct BackButtonView: View {
 }
 
 #Preview {
-    BackButtonView(primaryColor: Color(hex: "#FFC312"), showingAlert: .constant(false))
+    BackButtonView(primaryColor: Color(hex: "#FFC312"), showingAlert: .constant(false), navigateToHome: .constant(false))
 }

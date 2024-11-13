@@ -9,7 +9,7 @@ import SwiftUI
 
 struct GameView: View {
     let gameMode: GameMode
-    let difficulty: Difficulty 
+    let difficulty: Difficulty
     @Environment(\.presentationMode) var presentationMode
     
     @State private var board: [[Player]] = Array(repeating: Array(repeating: .none, count: 3), count: 3)
@@ -32,6 +32,7 @@ struct GameView: View {
     @State private var shakePowerUp: Bool = false
     @State private var winLineHighlighted: [Position] = []
     @State private var showingQuitAlert = false
+    @State private var navigateToHome = false
 
     
     let primaryColor = Color(hex: "#FFC312")
@@ -39,17 +40,17 @@ struct GameView: View {
     var body: some View {
         VStack {
             // Custom Back Button
-            BackButtonView(primaryColor: primaryColor, showingAlert: $showingQuitAlert)
-                .alert(isPresented: $showingQuitAlert) {
-                    Alert(
-                        title: Text("Quit Game"),
-                        message: Text("Are you sure you want to quit the game?"),
-                        primaryButton: .destructive(Text("Quit")) {
-                            presentationMode.wrappedValue.dismiss()
-                        },
-                        secondaryButton: .cancel()
-                    )
-                }
+//            BackButtonView(primaryColor: primaryColor, showingAlert: $showingQuitAlert, navigateToHome: $navigateToHome)
+//                .alert(isPresented: $showingQuitAlert) {
+//                    Alert(
+//                        title: Text("Quit Game"),
+//                        message: Text("Are you sure you want to quit the game?"),
+//                        primaryButton: .destructive(Text("Quit")) {
+//                            navigateToHome = true
+//                        },
+//                        secondaryButton: .cancel()
+//                    )
+//                }
             // Health Display
             HealthDisplayView(gameMode: gameMode, firstPlayerHealth: firstPlayerHealth, secondPlayerHealth: secondPlayerHealth, primaryColor: primaryColor)
                 .animation(.easeInOut, value: firstPlayerHealth)
@@ -104,7 +105,10 @@ struct GameView: View {
                 }
             }
         }
-        .navigationBarBackButtonHidden(true)  // Hide default back button
+        .navigationDestination(isPresented: $navigateToHome) {
+            HomeView()
+        }
+//        .navigationBarBackButtonHidden(true)  // Hide default back button
     }
 
     
