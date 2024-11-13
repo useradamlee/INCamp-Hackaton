@@ -33,7 +33,7 @@ struct GameView: View {
     @State private var winLineHighlighted: [Position] = []
     @State private var showingQuitAlert = false
     @State private var navigateToHome = false
-
+    @State private var showConfetti: Bool = false
     
     let primaryColor = Color(hex: "#FFC312")
     
@@ -109,6 +109,7 @@ struct GameView: View {
             HomeView()
         }
 //        .navigationBarBackButtonHidden(true)  // Hide default back button
+        ConfettiView(isShowing: $showConfetti)
     }
 
     
@@ -443,6 +444,9 @@ struct GameView: View {
             if player == .first || player == .human {
                 self.secondPlayerHealth = max(0, self.secondPlayerHealth - 1)
                 self.alertMessage = self.secondPlayerHealth > 0 ? "Player 1 won this round!" : "Player 1 won the game!"
+                if self.gameMode == .computer {
+                    self.showConfetti = true  // Trigger confetti for human player win
+                }
             } else {
                 self.firstPlayerHealth = max(0, self.firstPlayerHealth - 1)
                 self.alertMessage = self.firstPlayerHealth > 0 ? "\(player.displayName) won this round!" : "\(player.displayName) won the game!"
@@ -501,6 +505,7 @@ struct GameView: View {
         secondPlayerHealth = 3
         gameOver = false
         alertMessage = ""
+        showConfetti = false  // Reset confetti state
         resetBoard()
     }
 
