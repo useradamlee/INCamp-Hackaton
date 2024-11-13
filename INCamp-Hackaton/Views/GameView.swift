@@ -9,7 +9,7 @@ import SwiftUI
 
 struct GameView: View {
     let gameMode: GameMode
-    let difficulty: Difficulty // Add this line
+    let difficulty: Difficulty 
     @Environment(\.presentationMode) var presentationMode
     
     @State private var board: [[Player]] = Array(repeating: Array(repeating: .none, count: 3), count: 3)
@@ -22,7 +22,7 @@ struct GameView: View {
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     @State private var lastOpponentMove: Position? = nil
-    @State private var roundStarted: Bool = false // New flag to track the start of each round
+    @State private var roundStarted: Bool = false
     @State private var isWildCardActive: Bool = false
     @State private var wildCardPlayer: Player? = nil
     
@@ -31,6 +31,7 @@ struct GameView: View {
     @State private var turnIndicatorOpacity: Double = 1.0
     @State private var shakePowerUp: Bool = false
     @State private var winLineHighlighted: [Position] = []
+    @State private var showingQuitAlert = false
 
     
     let primaryColor = Color(hex: "#FFC312")
@@ -38,8 +39,17 @@ struct GameView: View {
     var body: some View {
         VStack {
             // Custom Back Button
-//            BackButtonView(primaryColor: primaryColor)
-            
+            BackButtonView(primaryColor: primaryColor, showingAlert: $showingQuitAlert)
+                .alert(isPresented: $showingQuitAlert) {
+                    Alert(
+                        title: Text("Quit Game"),
+                        message: Text("Are you sure you want to quit the game?"),
+                        primaryButton: .destructive(Text("Quit")) {
+                            presentationMode.wrappedValue.dismiss()
+                        },
+                        secondaryButton: .cancel()
+                    )
+                }
             // Health Display
             HealthDisplayView(gameMode: gameMode, firstPlayerHealth: firstPlayerHealth, secondPlayerHealth: secondPlayerHealth, primaryColor: primaryColor)
                 .animation(.easeInOut, value: firstPlayerHealth)

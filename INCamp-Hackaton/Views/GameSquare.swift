@@ -16,11 +16,9 @@ struct GameSquare: View {
         Button(action: action) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(hex: "#cc9c0e").opacity(0.2))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(isPowerSquare ? Color.yellow : Color.clear, lineWidth: 2)
-                    )
+                    .fill(Color(hex: "#CC9C0E").opacity(0.2)) // Darker shade for better contrast
+                    .stroke(isPowerSquare ? Color.yellow : Color.clear, lineWidth: 2)
+                    .foregroundColor(Color(hex: "#664E07")) // Darker shade for text
                 Text(symbol)
                     .font(.system(size: 40, weight: .bold))
                     .foregroundColor(Color(hex: "#664e07"))
