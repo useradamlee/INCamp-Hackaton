@@ -288,19 +288,15 @@ struct GameView: View {
     }
     
     private func findBestMove(for player: Player) -> Position? {
-        // Check for winning moves
         for row in 0..<3 {
             for col in 0..<3 {
                 let position = Position(row: row, col: col)
                 if board[row][col] == .none {
-                    // Try move
                     board[row][col] = player
                     if checkWin(for: player) {
-                        // Undo move and return position if it's a winning move
                         board[row][col] = .none
                         return position
                     }
-                    // Undo move if not winning
                     board[row][col] = .none
                 }
             }
