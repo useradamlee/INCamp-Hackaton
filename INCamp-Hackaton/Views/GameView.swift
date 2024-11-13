@@ -261,9 +261,8 @@ struct GameView: View {
                 board[randomPosition.row][randomPosition.col] = .computer
             }
         } else if difficulty == .hard {
-            if let bestMove = findBestMove(for: .computer) {
-                board[bestMove.row][bestMove.col] = .computer
-            }
+            let bestMove = findBestMoveWithMinimax()
+            board[bestMove.row][bestMove.col] = .computer
         }
         
         if checkWin(for: .computer) {
@@ -285,6 +284,73 @@ struct GameView: View {
             }
         }
         return positions
+    }
+    
+    private func minimax(board: [[Player]], depth: Int, isMaximizing: Bool, alpha: Int, beta: Int) -> Int {
+        // Terminal conditions
+        if checkWin(for: .computer) { return 10 - depth }
+        if checkWin(for: .human) { return depth - 10 }
+        if isBoardFull() { return 0 }
+        
+        if isMaximizing {
+            var maxEval = Int.min
+            var currentAlpha = alpha
+            
+            for row in 0..<3 {
+                for col in 0..<3 {
+                    if board[row][col] == .none {
+                        var newBoard = board
+                        newBoard[row][col] = .computer
+                        let eval = minimax(board: newBoard, depth: depth + 1, isMaximizing: false, alpha: currentAlpha, beta: beta)
+                        maxEval = max(maxEval, eval)
+                        currentAlpha = max(currentAlpha, eval)
+                        if beta <= currentAlpha {
+                            break
+                        }
+                    }
+                }
+            }
+            return maxEval
+        } else {
+            var minEval = Int.max
+            var currentBeta = beta
+            
+            for row in 0..<3 {
+                for col in 0..<3 {
+                    if board[row][col] == .none {
+                        var newBoard = board
+                        newBoard[row][col] = .human
+                        let eval = minimax(board: newBoard, depth: depth + 1, isMaximizing: true, alpha: alpha, beta: currentBeta)
+                        minEval = min(minEval, eval)
+                        currentBeta = min(currentBeta, eval)
+                        if currentBeta <= alpha {
+                            break
+                        }
+                    }
+                }
+            }
+            return minEval
+        }
+    }
+
+    private func findBestMoveWithMinimax() -> Position {
+        var bestScore = Int.min
+        var bestMove = Position(row: 0, col: 0)
+        
+        for row in 0..<3 {
+            for col in 0..<3 {
+                if board[row][col] == .none {
+                    var newBoard = board
+                    newBoard[row][col] = .computer
+                    let score = minimax(board: newBoard, depth: 0, isMaximizing: false, alpha: Int.min, beta: Int.max)
+                    if score > bestScore {
+                        bestScore = score
+                        bestMove = Position(row: row, col: col)
+                    }
+                }
+            }
+        }
+        return bestMove
     }
     
     private func findBestMove(for player: Player) -> Position? {
