@@ -9,6 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
     let primaryColor = Color(hex: "#CC9C0E") // Darker shade of the existing color
+    @State private var showingDifficultySelection = false
 
     var body: some View {
         TabView {
@@ -32,7 +33,9 @@ struct HomeView: View {
                             }
                             
                             // Player vs Computer Mode
-                            NavigationLink(destination: GameView(gameMode: .computer, difficulty: .medium)) { // Add difficulty parameter here
+                            Button(action: {
+                                showingDifficultySelection = true
+                            }) {
                                 GameModeButton(title: "Player vs Computer", imageName: "desktopcomputer", color: Color.black.opacity(0.8))
                             }
                         }
@@ -59,7 +62,9 @@ struct HomeView: View {
                 }
         }
         .accentColor(primaryColor) // Set the tab bar theme color
-    }
+        .sheet(isPresented: $showingDifficultySelection) {
+            DifficultySelectionView()
+        }    }
 }
 
 struct GameModeButton: View {
