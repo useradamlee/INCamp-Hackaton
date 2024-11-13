@@ -1,10 +1,3 @@
-//
-//  HomeView.swift
-//  INCamp-Hackaton
-//
-//  Created by Lee Jun Lei Adam on 12/11/24.
-//
-
 import SwiftUI
 
 struct HomeView: View {
@@ -63,8 +56,9 @@ struct HomeView: View {
         }
         .accentColor(primaryColor) // Set the tab bar theme color
         .sheet(isPresented: $showingDifficultySelection) {
-            DifficultySelectionView()
-        }    }
+            DifficultySelectionView(isPresented: $showingDifficultySelection)
+        }
+    }
 }
 
 struct GameModeButton: View {

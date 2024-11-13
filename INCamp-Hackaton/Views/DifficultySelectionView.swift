@@ -1,17 +1,11 @@
-//
-//  DifficultySelectionView.swift
-//  INCamp-Hackaton
-//
-//  Created by Lee Jun Lei Adam on 12/11/24.
-//
-
 import SwiftUI
 
 struct DifficultySelectionView: View {
+    @Binding var isPresented: Bool
     @State private var selectedDifficulty: Difficulty = .medium
-    
+
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 Text("Select Difficulty")
                     .font(.largeTitle)
@@ -37,19 +31,15 @@ struct DifficultySelectionView: View {
                 
                 Spacer()
             }
-            .navigationTitle("Difficulty Selection")
-            .navigationBarItems(leading: Button(action: {
-                // Navigation back action
-            }) {
-                Image(systemName: "chevron.left")
-                    .foregroundColor(Color(hex: "#FFC312"))
-                Text("Back")
-                    .foregroundColor(Color(hex: "#FFC312"))
-            })
+            .padding()
+            .background(Color.white)
+            .cornerRadius(20)
+            .shadow(radius: 10)
+            .padding()
         }
     }
 }
 
 #Preview {
-    DifficultySelectionView()
+    DifficultySelectionView(isPresented: .constant(true))
 }
