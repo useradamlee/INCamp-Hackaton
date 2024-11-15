@@ -2,7 +2,9 @@ import SwiftUI
 
 struct DifficultySelectionView: View {
     @Binding var isPresented: Bool
-    @State private var selectedDifficulty: Difficulty = .medium
+    @Binding var selectedDifficulty: Difficulty?
+    @Binding var navigateToGame: Bool
+    @State private var tempSelectedDifficulty: Difficulty = .medium
 
     var body: some View {
         NavigationStack {
@@ -11,7 +13,7 @@ struct DifficultySelectionView: View {
                     .font(.largeTitle)
                     .padding()
                 
-                Picker("Difficulty", selection: $selectedDifficulty) {
+                Picker("Difficulty", selection: $tempSelectedDifficulty) {
                     Text("Easy").tag(Difficulty.easy)
                     Text("Medium").tag(Difficulty.medium)
                     Text("Hard").tag(Difficulty.hard)
@@ -19,7 +21,11 @@ struct DifficultySelectionView: View {
                 .pickerStyle(SegmentedPickerStyle())
                 .padding()
                 
-                NavigationLink(destination: GameView(gameMode: .computer, difficulty: selectedDifficulty)) {
+                Button(action: {
+                    selectedDifficulty = tempSelectedDifficulty  // Set the selected difficulty
+                    isPresented = false                         // Dismiss sheet
+                    navigateToGame = true                       // Trigger navigation in parent
+                }) {
                     Text("Start Game")
                         .font(.headline)
                         .foregroundColor(.white)
@@ -39,7 +45,6 @@ struct DifficultySelectionView: View {
         }
     }
 }
-
 #Preview {
     DifficultySelectionView(isPresented: .constant(true))
 }

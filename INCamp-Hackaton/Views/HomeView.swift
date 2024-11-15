@@ -1,9 +1,11 @@
 import SwiftUI
 
 struct HomeView: View {
-    let primaryColor = Color(hex: "#CC9C0E") // Darker shade of the existing color
+    let primaryColor = Color(hex: "#CC9C0E")
     @State private var showingDifficultySelection = false
-
+    @State private var selectedDifficulty: Difficulty?  // Add this to store selected difficulty
+    @State private var navigateToGame = false          // Add this to control game navigation
+    
     var body: some View {
         TabView {
             NavigationView {
@@ -22,14 +24,18 @@ struct HomeView: View {
                         VStack(spacing: 20) {
                             // Player vs Player Mode
                             NavigationLink(destination: GameView(gameMode: .pvp, difficulty: .easy)) {
-                                GameModeButton(title: "Player vs Player", imageName: "person.2.fill", color: Color.black.opacity(0.8))
+                                GameModeButton(title: "Player vs Player",
+                                             imageName: "person.2.fill",
+                                             color: Color.black.opacity(0.8))
                             }
                             
                             // Player vs Computer Mode
                             Button(action: {
                                 showingDifficultySelection = true
                             }) {
-                                GameModeButton(title: "Player vs Computer", imageName: "desktopcomputer", color: Color.black.opacity(0.8))
+                                GameModeButton(title: "Player vs Computer",
+                                             imageName: "desktopcomputer",
+                                             color: Color.black.opacity(0.8))
                             }
                         }
                         .padding()
@@ -41,7 +47,12 @@ struct HomeView: View {
                     }
                     .padding()
                 }
-                .navigationBarHidden(true) // Hide the navigation bar for cleaner UI
+                .navigationBarHidden(true)
+                .navigationDestination(isPresented: $navigateToGame) {
+                    if let difficulty = selectedDifficulty {
+                        GameView(gameMode: .computer, difficulty: difficulty)
+                    }
+                }
             }
             .tabItem {
                 Image(systemName: "house.fill")
@@ -54,35 +65,14 @@ struct HomeView: View {
                     Text("Game History")
                 }
         }
-        .accentColor(primaryColor) // Set the tab bar theme color
+        .accentColor(primaryColor)
         .sheet(isPresented: $showingDifficultySelection) {
-            DifficultySelectionView(isPresented: $showingDifficultySelection)
+            DifficultySelectionView(isPresented: $showingDifficultySelection,
+                                  selectedDifficulty: $selectedDifficulty,
+                                  navigateToGame: $navigateToGame)
         }
     }
 }
-
-struct GameModeButton: View {
-    let title: String
-    let imageName: String
-    let color: Color
-    
-    var body: some View {
-        HStack {
-            Image(systemName: imageName)
-                .font(.title2)
-            Text(title)
-                .font(.title3)
-                .bold()
-        }
-        .foregroundColor(.white)
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(color)
-        .cornerRadius(15)
-        .shadow(radius: 5)
-    }
-}
-
 #Preview {
     HomeView()
 }
