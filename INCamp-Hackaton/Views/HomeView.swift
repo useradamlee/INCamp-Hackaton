@@ -67,12 +67,36 @@ struct HomeView: View {
         }
         .accentColor(primaryColor)
         .sheet(isPresented: $showingDifficultySelection) {
-            DifficultySelectionView(isPresented: $showingDifficultySelection,
-                                  selectedDifficulty: $selectedDifficulty,
-                                  navigateToGame: $navigateToGame)
+            DifficultySelectionView(isPresented: $showingDifficultySelection
+//                                  selectedDifficulty: $selectedDifficulty,
+//                                  navigateToGame: $navigateToGame
+            )
         }
     }
 }
+
+struct GameModeButton: View {
+    let title: String
+    let imageName: String
+    let color: Color
+    
+    var body: some View {
+        HStack {
+            Image(systemName: imageName)
+                .font(.title2)
+            Text(title)
+                .font(.title3)
+                .bold()
+        }
+        .foregroundColor(.white)
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(color)
+        .cornerRadius(15)
+        .shadow(radius: 5)
+    }
+}
+
 #Preview {
     HomeView()
 }
