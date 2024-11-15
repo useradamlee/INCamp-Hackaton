@@ -3,7 +3,7 @@ import SwiftUI
 struct DifficultySelectionView: View {
     @Binding var isPresented: Bool
     @State private var selectedDifficulty: Difficulty = .medium
-    @Environment(\.dismiss) var dismiss
+    @State private var showGame = false
     
     var body: some View {
         NavigationStack {
@@ -21,16 +21,8 @@ struct DifficultySelectionView: View {
                 .padding()
                 
                 Button(action: {
-                    dismiss()
-                    // We need to add a slight delay to allow the sheet to dismiss
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        isPresented = false
-                        // Present the GameView as a full-screen cover
-                        let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene
-                        let window = windowScene?.windows.first
-                        let gameView = UIHostingController(rootView: GameView(gameMode: .computer, difficulty: selectedDifficulty))
-                        window?.rootViewController?.present(gameView, animated: true)
-                    }
+                    showGame = true
+                    isPresented = false
                 }) {
                     Text("Start Game")
                         .font(.headline)
@@ -48,6 +40,9 @@ struct DifficultySelectionView: View {
             .cornerRadius(20)
             .shadow(radius: 10)
             .padding()
+            .fullScreenCover(isPresented: $showGame) {
+                GameView(gameMode: .computer, difficulty: selectedDifficulty)
+            }
         }
     }
 }
