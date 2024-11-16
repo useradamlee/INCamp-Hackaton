@@ -3,8 +3,8 @@ import SwiftUI
 struct HomeView: View {
     let primaryColor = Color(hex: "#CC9C0E")
     @State private var showingDifficultySelection = false
-    @State private var selectedDifficulty: Difficulty?  // Add this to store selected difficulty
-    @State private var navigateToGame = false          // Add this to control game navigation
+    @State private var showingGame = false
+    @State private var gameConfig: (mode: GameMode, difficulty: Difficulty)?
     
     var body: some View {
         TabView {
@@ -22,20 +22,41 @@ struct HomeView: View {
                             .cornerRadius(15)
                         
                         VStack(spacing: 20) {
-                            // Player vs Player Mode
-                            NavigationLink(destination: GameView(gameMode: .pvp, difficulty: .easy)) {
-                                GameModeButton(title: "Player vs Player",
-                                             imageName: "person.2.fill",
-                                             color: Color.black.opacity(0.8))
+                            Button(action: {
+                                gameConfig = (.pvp, .easy)
+                                showingGame = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "person.2.fill")
+                                        .font(.title2)
+                                    Text("Player vs Player")
+                                        .font(.title3)
+                                        .bold()
+                                }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.black.opacity(0.8))
+                                .cornerRadius(15)
+                                .shadow(radius: 5)
                             }
                             
-                            // Player vs Computer Mode
                             Button(action: {
                                 showingDifficultySelection = true
                             }) {
-                                GameModeButton(title: "Player vs Computer",
-                                             imageName: "desktopcomputer",
-                                             color: Color.black.opacity(0.8))
+                                HStack {
+                                    Image(systemName: "desktopcomputer")
+                                        .font(.title2)
+                                    Text("Player vs Computer")
+                                        .font(.title3)
+                                        .bold()
+                                }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.black.opacity(0.8))
+                                .cornerRadius(15)
+                                .shadow(radius: 5)
                             }
                         }
                         .padding()
@@ -48,11 +69,6 @@ struct HomeView: View {
                     .padding()
                 }
                 .navigationBarHidden(true)
-                .navigationDestination(isPresented: $navigateToGame) {
-                    if let difficulty = selectedDifficulty {
-                        GameView(gameMode: .computer, difficulty: difficulty)
-                    }
-                }
             }
             .tabItem {
                 Image(systemName: "house.fill")
@@ -67,10 +83,14 @@ struct HomeView: View {
         }
         .accentColor(primaryColor)
         .sheet(isPresented: $showingDifficultySelection) {
-            DifficultySelectionView(isPresented: $showingDifficultySelection
-//                                  selectedDifficulty: $selectedDifficulty,
-//                                  navigateToGame: $navigateToGame
-            )
+            DifficultySelectionView(isPresented: $showingDifficultySelection,
+                                  showingGame: $showingGame,
+                                  gameConfig: $gameConfig)
+        }
+        .fullScreenCover(isPresented: $showingGame) {
+            if let config = gameConfig {
+                GameView(gameMode: config.mode, difficulty: config.difficulty)
+            }
         }
     }
 }

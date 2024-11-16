@@ -2,8 +2,9 @@ import SwiftUI
 
 struct DifficultySelectionView: View {
     @Binding var isPresented: Bool
+    @Binding var showingGame: Bool
+    @Binding var gameConfig: (mode: GameMode, difficulty: Difficulty)?
     @State private var selectedDifficulty: Difficulty = .medium
-    @State private var showGame = false
     
     var body: some View {
         NavigationStack {
@@ -21,8 +22,9 @@ struct DifficultySelectionView: View {
                 .padding()
                 
                 Button(action: {
-                    showGame = true
+                    gameConfig = (.computer, selectedDifficulty)
                     isPresented = false
+                    showingGame = true
                 }) {
                     Text("Start Game")
                         .font(.headline)
@@ -40,13 +42,14 @@ struct DifficultySelectionView: View {
             .cornerRadius(20)
             .shadow(radius: 10)
             .padding()
-            .fullScreenCover(isPresented: $showGame) {
-                GameView(gameMode: .computer, difficulty: selectedDifficulty)
-            }
         }
     }
 }
 
 #Preview {
-    DifficultySelectionView(isPresented: .constant(true))
+    DifficultySelectionView(
+        isPresented: .constant(true),
+        showingGame: .constant(false),
+        gameConfig: .constant(nil)
+    )
 }
